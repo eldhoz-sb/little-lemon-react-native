@@ -1,138 +1,77 @@
-import * as React from "react";
-import {
-  View,
-  Image,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
-} from "react-native";
-import { validateEmail } from "../utils";
+import React from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Toast from "react-native-toast-message";
-import styles from "../assets/styles";
 
-function Onboarding({ navigation }) {
-  const [name, onChangeName] = React.useState("");
-  const [email, onChangeEmail] = React.useState("");
-  const [isNameValid, setIsNameValid] = React.useState(false);
-  const [isMailValid, setIsMailValid] = React.useState(false);
-  const [nameErrorText, setNAmeErrorText] = React.useState("");
-
-  const handleNameEdit = (text) => {
-    onChangeName(text);
-    if (text.match(/^[A-Za-z]+$/)) {
-      setIsNameValid(true);
-      setNAmeErrorText("");
-    } else {
-      setIsNameValid(false);
-      setNAmeErrorText("Please insert your first name (in letters)");
-    }
-  };
-  const handleMailEdit = (text) => {
-    onChangeEmail(text);
-    if (validateEmail(text)) setIsMailValid(true);
-    else setIsMailValid(false);
-  };
-  const handleSubscribeRequest = () => {
-    try {
-      let userData = {
-        firstName: name,
-        lastName: "",
-        mail: email,
-        phone: "",
-        imagePath: "",
-      };
-      AsyncStorage.setItem("userData", JSON.stringify(userData));
-      AsyncStorage.setItem("isOnboardingCompleted", "true");
-      let preferences = {
-        orderStatus: true,
-        passwordChanges: true,
-        specialOffers: true,
-        newsletter: true,
-      };
-      AsyncStorage.setItem("preferences", JSON.stringify(preferences));
-      Toast.show({
-        type: "success",
-        text1: "Logging in",
-        text2: "Thanks for signing up 👋",
-      });
-      let wentToNewTab = false;
-      setInterval(() => {
-        if (!wentToNewTab) {
-          navigation.push("Home");
-          wentToNewTab = true;
-        }
-      }, 1000);
-    } catch (err) {
-      Toast.show({
-        type: "error",
-        text1: "Not able to log in",
-        text2: "Sorry there was an issue, please try again later",
-      });
-    }
+export default function Onboarding({ navigation }) {
+  const completeOnboarding = async () => {
+    await AsyncStorage.setItem("isOnboardingCompleted", "true");
+    navigation.replace("SignUp");
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "position"}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View>
-          <Image
-            style={styles.logo}
-            source={require("../assets/Logo.png")}
-            resizeMode="contain"
-            accessible={true}
-            accessibilityLabel={"Little Lemon Logo"}
-          />
-          <View style={{ marginVertical: 20 }}>
-            <Text style={styles.sectionTitle}>Let us get to know you</Text>
-          </View>
-          <View style={{ marginVertical: 40 }}>
-            <Text style={{ fontSize: 20 }}>First Name</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Type your first name"
-              value={name}
-              onChangeText={(text) => handleNameEdit(text)}
-              maxLength={100}
-              keyboardType="default"
-            />
-            <Text style={{ color: "#DC4C64" }}>{nameErrorText}</Text>
-            <View style={{ marginTop: 40 }}>
-              <Text style={{ fontSize: 20 }}>Email</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Type your email"
-                value={email}
-                onChangeText={(text) => handleMailEdit(text)}
-                maxLength={50}
-                keyboardType="email-address"
-              />
-            </View>
-          </View>
-          <Pressable
-            style={() =>
-              isNameValid && isMailValid
-                ? styles.buttonPrimary
-                : styles.buttonDisabled
-            }
-            disabled={!isNameValid || !isMailValid}
-            onPressIn={handleSubscribeRequest}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </Pressable>
-          <Toast />
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+    <View style={styles.container}>
+      <Image source={require("../assets/Logo.png")} style={styles.logo} />
+      <TouchableOpacity style={styles.button} onPress={completeOnboarding}>
+        <Text style={styles.buttonText}>Let's Start</Text>
+      </TouchableOpacity>
+      <View style={styles.signIncontainer}>
+        <Text style={styles.staticText}>Already have an account? </Text>
+        <TouchableOpacity onPress={() => navigation.replace("SignIn")}>
+          <Text style={styles.signInText}>Sign In</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
-export default Onboarding;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  logo: {
+    width: "80%",
+    resizeMode: "contain",
+    marginBottom: 20,
+  },
+  button: {
+    width: "80%",
+    marginTop: 20,
+    backgroundColor: "#A3CFFF",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderColor: "#94C7FF",
+    borderWidth: 1,
+    borderRadius: 32,
+    shadowColor: "#A3CFFF",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  buttonText: {
+    color: "#092A4D",
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  signIncontainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+    width: "100%",
+    marginBottom: 10,
+  },
+  staticText: {
+    fontSize: 14,
+    color: "#333",
+    fontFamily: "Poppins_Medium",
+  },
+  signInText: {
+    fontSize: 14,
+    textDecorationLine: "underline",
+    fontFamily: "Poppins_Bold",
+  },
+});
